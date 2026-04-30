@@ -114,7 +114,6 @@ export default function App() {
             onStart={startQuiz}
             onHistory={goHistory}
             onSignIn={() => setLoginOpen(true)}
-            onViewDemo={viewRecord}
           />
         )}
         {stage === 'quiz' && <Questionnaire onComplete={finishQuiz} />}

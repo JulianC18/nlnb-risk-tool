@@ -6,7 +6,7 @@
 // ============================================================
 
 import { useState } from 'react'
-import { getHistoryFor, getAllHistory, deleteAssessment, isAdmin } from '../lib/storage'
+import { getHistoryFor, getAllHistory, getHistory, deleteAssessment, isAdmin } from '../lib/storage'
 
 function bandFor(score) {
   const s = Math.round(score)
@@ -26,7 +26,15 @@ function formatDate(ts) {
 
 export default function History({ username, onView, onNew, onBack }) {
   const admin = isAdmin(username)
-  const load = () => admin ? getAllHistory() : getHistoryFor(username)
+
+  // Admin sees everything. Regular users see their own records plus the
+  // built-in demo examples (so they always have something to compare against).
+  const load = () => {
+    if (admin) return getAllHistory()
+    const own = getHistoryFor(username)
+    const demos = getHistory().filter(r => r.isDemo)
+    return [...own, ...demos].sort((a, b) => b.timestamp - a.timestamp)
+  }
   const [records, setRecords] = useState(load)
 
   function handleDelete(id, e) {
@@ -59,13 +67,17 @@ export default function History({ username, onView, onNew, onBack }) {
             {records.map((r, i) => {
               const b = bandFor(r.overallScore)
               return (
-                <div key={r.id} className="history-row" onClick={() => onView(r)}>
+                <div key={r.id} className={`history-row ${r.isDemo ? 'history-row-demo' : ''}`} onClick={() => onView(r)}>
                   <div className="history-row-main">
                     <div className="history-row-num">#{records.length - i}</div>
                     <div>
                       <div className="history-row-date">
-                        {formatDate(r.timestamp)}
-                        {admin && (
+                        {r.isDemo
+                          ? (r.username === 'demo-good' ? 'Example: Strong Security' : 'Example: Weak Security')
+                          : formatDate(r.timestamp)
+                        }
+                        {r.isDemo && <span className="demo-badge">DEMO</span>}
+                        {admin && !r.isDemo && (
                           <span className="history-row-user">{r.username}</span>
                         )}
                       </div>
@@ -76,14 +88,16 @@ export default function History({ username, onView, onNew, onBack }) {
                   </div>
                   <div className="history-row-right">
                     <span className={`level-badge band-${b.band}`}>{b.label}</span>
-                    <button
-                      className="history-delete"
-                      onClick={(e) => handleDelete(r.id, e)}
-                      aria-label="Delete assessment"
-                      title="Delete"
-                    >
-                      ×
-                    </button>
+                    {!r.isDemo && (
+                      <button
+                        className="history-delete"
+                        onClick={(e) => handleDelete(r.id, e)}
+                        aria-label="Delete assessment"
+                        title="Delete"
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
                 </div>
               )

@@ -4,18 +4,10 @@
 // Default landing. Sign-in is optional — anyone can start.
 // ============================================================
 
-import { getHistoryFor, isAdmin, getAllHistory, getHistory } from '../lib/storage'
-
-export default function Intro({ username, onStart, onHistory, onSignIn, onViewDemo }) {
-  const demos = getHistory().filter(r => r.isDemo)
-  const goodDemo = demos.find(r => r.username === 'demo-good')
-  const badDemo = demos.find(r => r.username === 'demo-bad')
-  let hasHistory = false
-  if (username) {
-    hasHistory = isAdmin(username)
-      ? getAllHistory().length > 0
-      : getHistoryFor(username).length > 0
-  }
+export default function Intro({ username, onStart, onHistory, onSignIn }) {
+  // When logged in we always show View History (page handles empty state
+  // and demo examples are always visible there).
+  const hasHistory = !!username
 
   return (
     <div className="card">
@@ -58,35 +50,6 @@ export default function Intro({ username, onStart, onHistory, onSignIn, onViewDe
           </button>
         )}
       </div>
-
-      {(goodDemo || badDemo) && (
-        <div className="demo-section">
-          <h3>See Example Reports</h3>
-          <p className="demo-sub">Don't want to take the quiz first? View pre-built sample assessments:</p>
-          <div className="demo-buttons">
-            {goodDemo && (
-              <button
-                className="demo-btn demo-good"
-                onClick={() => onViewDemo(goodDemo)}
-              >
-                <span className="demo-btn-tag">LOW RISK</span>
-                <span className="demo-btn-title">Strong Security Posture</span>
-                <span className="demo-btn-meta">Score {goodDemo.overallScore.toFixed(2)} / 5.00</span>
-              </button>
-            )}
-            {badDemo && (
-              <button
-                className="demo-btn demo-bad"
-                onClick={() => onViewDemo(badDemo)}
-              >
-                <span className="demo-btn-tag">CRITICAL RISK</span>
-                <span className="demo-btn-title">Weak Security Posture</span>
-                <span className="demo-btn-meta">Score {badDemo.overallScore.toFixed(2)} / 5.00</span>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
