@@ -16,7 +16,8 @@ import Login from './components/Login'
 import Questionnaire from './components/Questionnaire'
 import Summary from './components/Summary'
 import History from './components/History'
-import { getUser, clearUser, isAdmin } from './lib/storage'
+import { getUser, clearUser, isAdmin, saveAssessment } from './lib/storage'
+import { getDemoRecords, hasSeededDemo, markDemoSeeded } from './data/demoSeed'
 
 export default function App() {
   const [user, setUserState] = useState(null)
@@ -25,10 +26,14 @@ export default function App() {
   const [viewing, setViewing] = useState(null)
   const [loginOpen, setLoginOpen] = useState(false)
 
-  // Restore user from localStorage on first load
+  // Restore user + seed demo records on first load (one-time per browser)
   useEffect(() => {
     const u = getUser()
     if (u) setUserState(u)
+    if (!hasSeededDemo()) {
+      for (const rec of getDemoRecords()) saveAssessment(rec)
+      markDemoSeeded()
+    }
   }, [])
 
   function handleLogin(name) {
@@ -68,9 +73,10 @@ export default function App() {
     setStage('view')
   }
 
-  function backToHistory() {
+  function backFromView() {
     setViewing(null)
-    setStage('history')
+    // If viewer is logged in, go back to history list; otherwise to intro.
+    setStage(user ? 'history' : 'intro')
   }
 
   function backToIntro() {
@@ -108,6 +114,7 @@ export default function App() {
             onStart={startQuiz}
             onHistory={goHistory}
             onSignIn={() => setLoginOpen(true)}
+            onViewDemo={viewRecord}
           />
         )}
         {stage === 'quiz' && <Questionnaire onComplete={finishQuiz} />}
@@ -133,7 +140,7 @@ export default function App() {
             answers={viewing.answers}
             username={user}
             readOnly
-            onRestart={backToHistory}
+            onRestart={backFromView}
           />
         )}
       </main>

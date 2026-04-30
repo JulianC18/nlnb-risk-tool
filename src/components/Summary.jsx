@@ -145,7 +145,7 @@ export default function Summary({ answers, username, onRestart, onHistory, onSig
 
       <div className="summary-actions">
         <button className="btn-primary" onClick={onRestart}>
-          {readOnly ? 'Back to History' : 'Start New Assessment'}
+          {readOnly ? 'Back' : 'Start New Assessment'}
         </button>
         {!readOnly && onHistory && (
           <button className="btn-secondary" onClick={onHistory}>
